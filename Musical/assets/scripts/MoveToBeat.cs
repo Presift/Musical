@@ -26,7 +26,7 @@ public class MoveToBeat : MonoBehaviour {
 
 	
 	//temporary public values
-	public float arrivalBeat;
+//	public float arrivalBeat;
 
 
 	// Use this for initialization
@@ -69,6 +69,7 @@ public class MoveToBeat : MonoBehaviour {
 
 		journeyLength = Vector3.Distance(startPosition, targetPosition);
 //		Debug.Log (" journey length : " + journeyLength);
+//		Debug.Log (" lerp speed : " + lerpSpeed);
 
 
 		startBeat = endBeat - journeyLength/lerpSpeed;

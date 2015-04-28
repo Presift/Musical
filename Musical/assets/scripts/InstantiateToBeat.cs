@@ -13,10 +13,10 @@ public class InstantiateToBeat : MonoBehaviour {
 	float instantiationFrequency = 4;
 	
 	GameObject tap;
-	GameObject tapAndHold;
+//	GameObject tapAndHold;
 	GameObject swipe;
-	GameObject swipeAndHold;
-
+//	GameObject swipeAndHold;
+	GameObject endHold;
 	GameObject holdLine;
 
 	float lengthPerBeat;
@@ -42,25 +42,33 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	public IncomingObject nextObject;
 
+	Sprite tapSprite;
+//	Sprite upSprite;
+
 	void Awake (){
 
 		tap = (GameObject)Resources.Load("Tap");
 		swipe = (GameObject)Resources.Load ("Swipe");
 		holdLine = (GameObject)Resources.Load ("Held Line");
+		endHold = (GameObject)Resources.Load ("EndHold");
 
+		SpriteRenderer tapRenderer = (SpriteRenderer)tap.GetComponent (typeof(SpriteRenderer));
+		tapSprite = tapRenderer.sprite;
 	}
 
 	void Start () {
 
 		ResizeWidthOfHeldLine ();
 
+		targetPosition = target.transform.position;
+		destroyPosition = targetPosition - new Vector3 (0, 2, 0);
+
 		CreateMusicalObjects ();
 
 		input.musicalObjects = musicObjects;
 		input.currentObject = musicObjects [0];
 
-		targetPosition = target.transform.position;
-		destroyPosition = targetPosition - new Vector3 (0, 2, 0);
+
 		
 
 
@@ -75,27 +83,7 @@ public class InstantiateToBeat : MonoBehaviour {
 		//if time to instantiate new object
 		if( metronome.currentPartialBeats > ( arrivalBeat - instantiationTimeBuffer) )
 		{
-			// instantiate object
-			GameObject newObject = ( GameObject ) Instantiate( nextObject.prefab, nextObject.startPosition, Quaternion.identity );
-			newObject.name += nextObject.index;
-			MoveToBeat moveScript = ( MoveToBeat ) newObject.GetComponent(typeof( MoveToBeat ));
-			ShowFeedback feedback = ( ShowFeedback ) newObject.GetComponent(typeof( ShowFeedback ));
-
-			moveScript.metronome = metronome;
-			// calculate its start values
-
-			moveScript.CalculateAndSetValues( nextObject.startPosition, targetPosition, destroyPosition, arrivalBeat, metronome.bpm );
-
-			//set create objects in musical objects
-			nextObject.musicObject = newObject;
-			nextObject.moveScript = moveScript;
-			nextObject.feedbackScript = feedback;
-
-			if( nextObject.beatsToHold >= 1 )
-			{
-				GameObject newLine = ( GameObject ) Instantiate( holdLine, nextObject.startPosition, Quaternion.identity );
-				nextObject.CreateHeldObject( newLine );
-			}
+			nextObject.Activate ( true );
 
 			currentTurn ++;
 
@@ -115,14 +103,14 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	}
 
-	void SetNewLineTransform( float beatsHeld, GameObject heldLine, Vector3 bottomOfLine )
-	{
-		float newLengthOfLine = beatsHeld * lengthPerBeat;
-
-		float currentLengthOfLine = originalLineLength;
-
-
-	}
+//	void SetNewLineTransform( float beatsHeld, GameObject heldLine, Vector3 bottomOfLine )
+//	{
+//		float newLengthOfLine = beatsHeld * lengthPerBeat;
+//
+//		float currentLengthOfLine = originalLineLength;
+//
+//
+//	}
 
 	void ResizeWidthOfHeldLine()
 	{
@@ -140,7 +128,7 @@ public class InstantiateToBeat : MonoBehaviour {
 
 		MoveToBeat moveScript = (MoveToBeat)tap.GetComponent (typeof(MoveToBeat));
 
-		float lengthPerBeat = moveScript.lerpSpeed;
+		lengthPerBeat = moveScript.lerpSpeed;
 
 		originalLineLength = lineRenderer.bounds.size.y;
 		 
@@ -155,9 +143,9 @@ public class InstantiateToBeat : MonoBehaviour {
 		{
 			float onTargetBeat = arrivalBeats[ i ].x;
 			float startOfInitialInput = onTargetBeat - ( timeForEarlyResponse * (metronome.bpm / 60 ));
-//			Debug.Log ("start : " + startOfInitialInput );
+
 			float endOfInitialInput = onTargetBeat + ( timeForLateResponse * (metronome.bpm / 60 ));
-//			Debug.Log ("end : " + endOfInitialInput );
+
 			float beatsToHold = arrivalBeats[ i ].z;
 
 			int typeOfObject = ( int ) arrivalBeats[ i ].y;
@@ -170,9 +158,16 @@ public class InstantiateToBeat : MonoBehaviour {
 			Vector3 startPosition = startPositions[ positionIndex ];
 			positionIndex ++;
 
-			IncomingObject newObject = new IncomingObject( typeOfObject, startOfInitialInput, endOfInitialInput, onTargetBeat, beatsToHold, GetUpcomingObject( typeOfObject), i, startPosition );
+			IncomingObject musicObject = new IncomingObject( typeOfObject, startOfInitialInput, endOfInitialInput, onTargetBeat, beatsToHold, GetUpcomingObject( typeOfObject), i );
 
-			musicObjects.Add ( newObject );
+			musicObject.CreateHeadOfObject( metronome, startPosition, targetPosition, destroyPosition );
+
+			if( musicObject.held )
+			{
+				musicObject.CreateHeldObject( holdLine, endHold, tapSprite, lengthPerBeat, originalLineLength );
+			}
+//
+			musicObjects.Add ( musicObject );
 
 		}
 
@@ -201,7 +196,7 @@ public class InstantiateToBeat : MonoBehaviour {
 
 
 
-public class IncomingObject
+public class IncomingObject : ScriptableObject
 {
 	
 	public inputType expected;
@@ -211,6 +206,8 @@ public class IncomingObject
 	public float endInput;
 	
 	public float endHold;
+	public GameObject holdLine;
+	SpriteRenderer lineRenderer;
 	public GameObject secondInputObject;
 	public bool held;
 
@@ -228,7 +225,7 @@ public class IncomingObject
 	public Vector3 startPosition;
 
 	
-	public IncomingObject( int typeOfInput, float start, float end, float arriveBeat, float beatsHeld, GameObject newObject, int indexNum, Vector3 startPos )
+	public IncomingObject( int typeOfInput, float start, float end, float arriveBeat, float beatsHeld, GameObject newObject, int indexNum )
 	{
 		expected = GetInputType( typeOfInput );
 		currentInput = inputType.none;
@@ -237,6 +234,7 @@ public class IncomingObject
 		endInput = end;
 		
 		arrivalBeat = arriveBeat;
+//		Debug.Log (" arrival beat set to : " + arriveBeat);
 		beatsToHold = beatsHeld;
 		endHold = beatsHeld + arrivalBeat;
 
@@ -244,21 +242,97 @@ public class IncomingObject
 
 		index = indexNum;
 
-		startPosition = startPos;
 
+
+//		GameObject newThing = ( GameObject ) Instantiate
 		if( beatsToHold > 1 )
 		{
 			held = true;
+
+			//if main music 
 		}
 		else
 		{
 			held = false;
 		}
+
 	}
 
-	public void CreateHeldObject( GameObject heldLine )
+
+	public void CreateHeadOfObject( Metronome metronome, Vector3 startPos, Vector3 target, Vector3 destroy )
 	{
-		SpriteRenderer lineRenderer = (SpriteRenderer)heldLine.GetComponent (typeof(SpriteRenderer));
+		startPosition = startPos;
+
+		// instantiate object
+		musicObject = ( GameObject ) Instantiate( prefab, startPosition, Quaternion.identity );
+		musicObject.name += index;
+		
+		moveScript = ( MoveToBeat ) musicObject.GetComponent(typeof( MoveToBeat ));
+		feedbackScript = ( ShowFeedback ) musicObject.GetComponent(typeof( ShowFeedback ));
+		
+		moveScript.metronome = metronome;
+		// calculate its start values
+		
+		moveScript.CalculateAndSetValues( startPosition, target, destroy, arrivalBeat, metronome.bpm );
+
+		Activate ( false );
+
+	}
+
+	public void CreateHeldObject( GameObject heldLine, GameObject tailPrefab, Sprite tapSprite, float lengthPerBeat, float originalLengthOfLine  )
+	{
+		float lengthOfBar = lengthPerBeat * beatsToHold;
+		Vector3 positionOfTail = startPosition + new Vector3 (0, lengthOfBar, 0);
+		Vector3 positionOfBar = startPosition + new Vector3 (0, lengthOfBar / 2, 0);
+
+		//create tail object
+		secondInputObject = ( GameObject ) Instantiate( tailPrefab, positionOfTail, Quaternion.identity );
+
+		//set sprites for head and tail objects
+		if( expected != inputType.tap )
+		{
+			SpriteRenderer mainInputRenderer = ( SpriteRenderer ) musicObject.GetComponent( typeof( SpriteRenderer ));
+			Sprite mainInputSprite = mainInputRenderer.sprite;
+
+	
+			//set tail to sprite in head
+			SpriteRenderer tailRenderer = ( SpriteRenderer ) secondInputObject.GetComponent( typeof( SpriteRenderer ));
+			tailRenderer.sprite = mainInputSprite;
+			
+			//set head to tap
+			mainInputRenderer.sprite = tapSprite;
+		}
+
+		//instantiate new hold line and resize
+
+		holdLine = ( GameObject ) Instantiate( heldLine, positionOfBar, Quaternion.identity );
+
+		lineRenderer = (SpriteRenderer)holdLine.GetComponent (typeof(SpriteRenderer));
+
+		Debug.Log ("length per beat : " + lengthPerBeat);
+		Debug.Log (" original : " + originalLengthOfLine);
+		float scaleChangeOfLength = lengthOfBar / originalLengthOfLine;
+
+		//size line for beat length
+
+		holdLine.transform.localScale = new Vector3 ( holdLine.transform.localScale.x, holdLine.transform.localScale.y * scaleChangeOfLength, holdLine.transform.localScale.z );
+
+
+		holdLine.transform.parent = musicObject.transform;
+		secondInputObject.transform.parent = musicObject.transform;
+
+	}
+
+	public void Activate( bool activate )
+	{
+		if( activate )
+		{
+			musicObject.SetActive ( true );
+		}
+		else
+		{
+			musicObject.SetActive ( false );
+		}
 	}
 	
 	inputType GetInputType( int typeOfInput )
