@@ -36,15 +36,18 @@ public class ShowFeedback : MonoBehaviour {
 		}
 	}
 
-	public void ShowSuccess()
+	public void ShowSuccess( bool held )
 	{
 		moveScript.targetReached = true;
 		moveScript.continueToDestructionPosition = false;
 
 		thisRenderer.sprite = correct;
-		destroySelf = true;
 
-//		Debug.Log ("correct input at correct time ");
+		if (!held) 
+		{
+			destroySelf = true;
+		}
+
 	}
 
 	public void DestroySelf()

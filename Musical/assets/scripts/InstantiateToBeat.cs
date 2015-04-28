@@ -42,12 +42,15 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	public IncomingObject nextObject;
 
-	// Use this for initialization
-	void Start () {
+	void Awake (){
 
 		tap = (GameObject)Resources.Load("Tap");
 		swipe = (GameObject)Resources.Load ("Swipe");
 		holdLine = (GameObject)Resources.Load ("Held Line");
+
+	}
+
+	void Start () {
 
 		ResizeWidthOfHeldLine ();
 
@@ -131,7 +134,7 @@ public class InstantiateToBeat : MonoBehaviour {
 		float currentWidthOfLine = lineRenderer.bounds.size.x;
 
 		float desiredWidthOfLine = widthOfInputCircle / 3;
-		float scaleChangeOfLine = currentWidthOfLine / desiredWidthOfLine;
+		float scaleChangeOfLine = desiredWidthOfLine / currentWidthOfLine;
 
 		holdLine.transform.localScale *= scaleChangeOfLine;
 
@@ -209,6 +212,7 @@ public class IncomingObject
 	
 	public float endHold;
 	public GameObject secondInputObject;
+	public bool held;
 
 	public float beatsToHold;
 	public float arrivalBeat;
@@ -241,6 +245,15 @@ public class IncomingObject
 		index = indexNum;
 
 		startPosition = startPos;
+
+		if( beatsToHold > 1 )
+		{
+			held = true;
+		}
+		else
+		{
+			held = false;
+		}
 	}
 
 	public void CreateHeldObject( GameObject heldLine )

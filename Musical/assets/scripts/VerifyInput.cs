@@ -33,7 +33,6 @@ public class VerifyInput : MonoBehaviour {
 		{
 			currentObjectIndex ++;
 			currentObject = musicalObjects[ currentObjectIndex ];
-//			Debug.Log ( currentObjectIndex + ", object count : " + musicalObjects.Count);
 		}
 	}
 
@@ -80,7 +79,7 @@ public class VerifyInput : MonoBehaviour {
 			if( currentObject.expected == inputType.tap )
 			{
 				// show successful feedback on musical object
-				currentObject.feedbackScript.ShowSuccess();
+				currentObject.feedbackScript.ShowSuccess( currentObject.held );
 			}
 
 		}
@@ -147,32 +146,6 @@ public class VerifyInput : MonoBehaviour {
 		return verticalDistance;
 	}
 
-//	public void StartCheckingInput()
-//	{
-//		checkInput = true;
-//	}
-//
-//	public void StopCheckingInput()
-//	{
-//		checkInput = false;
-//		currentInput = inputType.none;
-//	}
-//
-//	public void SetExpectedInput()
-//	{
-//
-//	}
-
-//		public float SetInputStats( Metronome masterMetronome, float bpm, float arrivalBeat )
-//		{
-//			metronome = masterMetronome;
-//			startInput = arrivalBeat - ( timeForEarlyResponse * (bpm / 60 ));
-//			endInput = arrivalBeat + ( timeForLateResponse * (bpm / 60 ));
-//			endHold = arrivalBeat + holdTime;								//may need to be adjusted for early response time
-//			
-//			return endInput;
-//		}
-	 
 }
 
 
