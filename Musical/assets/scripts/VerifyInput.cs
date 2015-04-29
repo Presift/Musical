@@ -34,6 +34,17 @@ public class VerifyInput : MonoBehaviour {
 			currentObjectIndex ++;
 			currentObject = musicalObjects[ currentObjectIndex ];
 		}
+
+		//if current object is being held
+		if( !currentObject.isBeingHeld && currentObject.held )
+		{
+			//if remaining beats to hold and not expecting swipe
+			if( WithinInputRange() && currentObject.expected == inputType.tap )
+			{
+				currentObject.feedbackScript.ShowSuccess();
+			}
+			currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+		}
 	}
 
 
@@ -75,25 +86,69 @@ public class VerifyInput : MonoBehaviour {
 		//if within input range of current object
 		if( WithinInputRange() )
 		{
-			//if correct input is tap
-			if( currentObject.expected == inputType.tap )
+			//if correct input is tap OR 
+			if( currentObject.expected == inputType.tap || ( currentObject.held && currentObject.isBeingHeld))
 			{
-				// show successful feedback on musical object
-				currentObject.feedbackScript.ShowSuccess( currentObject.held );
+
+
+				if( currentObject.held )
+				{
+
+					currentObject.feedbackScript.StartHold();
+					currentObject.UpdateInputStartEndRange();
+					currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+
+//					Debug.Log ( 
+				}
+				else
+				{
+					// show successful feedback on musical object
+					currentObject.feedbackScript.ShowSuccess();
+				}
 			}
 
 		}
 
 	}
-		    
+
+
+
+	void OnMouseExit()
+	{
+		currentObject.isBeingHeld = false;
+	}
+			    
 
 	void OnMouseUp()
 	{
+
+
 		inputType swipe = DetermineSwipe (Input.mousePosition);
 
 		float beatsHeld = metronome.currentPartialBeats - beatOfInput;
 
-//		Debug.Log (" swipe type : " + swipe);
+		if (WithinInputRange ()) 
+		{
+			if( currentObject.expected == swipe )
+			{
+	
+				currentObject.feedbackScript.ShowSuccess();
+
+			}
+			else if( currentObject.expected == inputType.tap && !currentObject.isBeingHeld )
+			{
+				currentObject.feedbackScript.ShowSuccess();
+			}
+		}
+		//if held object is let go early
+		else if( currentObject.held && currentObject.isBeingHeld )
+		{
+			currentObject.feedbackScript.UnsuccessfulHoldContinuesToDestruction();
+		}
+
+		currentObject.isBeingHeld = false;
+
+		//if object should be held
 	}
 
 	inputType DetermineSwipe( Vector3 endPosition )

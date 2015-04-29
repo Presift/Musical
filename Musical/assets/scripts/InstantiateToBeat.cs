@@ -201,15 +201,20 @@ public class IncomingObject : ScriptableObject
 	
 	public inputType expected;
 	public inputType currentInput;
-	
+	public bool inputRangeIsForHead;
+
 	public float startInput;
 	public float endInput;
 	
 	public float endHold;
 	public GameObject holdLine;
-	SpriteRenderer lineRenderer;
+//	SpriteRenderer lineRenderer;
+	float previousLineLength;
 	public GameObject secondInputObject;
 	public bool held;
+	float distancePerBeat;
+
+	public bool isBeingHeld;
 
 	public float beatsToHold;
 	public float arrivalBeat;
@@ -229,20 +234,22 @@ public class IncomingObject : ScriptableObject
 	{
 		expected = GetInputType( typeOfInput );
 		currentInput = inputType.none;
-		
+		inputRangeIsForHead = true;
+
 		startInput = start;
 		endInput = end;
-		
+
 		arrivalBeat = arriveBeat;
 //		Debug.Log (" arrival beat set to : " + arriveBeat);
 		beatsToHold = beatsHeld;
+
 		endHold = beatsHeld + arrivalBeat;
 
 		prefab = newObject;
 
 		index = indexNum;
 
-
+		isBeingHeld = false;
 
 //		GameObject newThing = ( GameObject ) Instantiate
 		if( beatsToHold > 1 )
@@ -256,6 +263,14 @@ public class IncomingObject : ScriptableObject
 			held = false;
 		}
 
+	}
+
+	public void UpdateInputStartEndRange()
+	{
+		isBeingHeld = true;
+		inputRangeIsForHead = false;
+		startInput += beatsToHold;
+		endInput += beatsToHold;
 	}
 
 
@@ -281,6 +296,8 @@ public class IncomingObject : ScriptableObject
 
 	public void CreateHeldObject( GameObject heldLine, GameObject tailPrefab, Sprite tapSprite, float lengthPerBeat, float originalLengthOfLine  )
 	{
+		distancePerBeat = lengthPerBeat;
+
 		float lengthOfBar = lengthPerBeat * beatsToHold;
 		Vector3 positionOfTail = startPosition + new Vector3 (0, lengthOfBar, 0);
 		Vector3 positionOfBar = startPosition + new Vector3 (0, lengthOfBar / 2, 0);
@@ -307,10 +324,10 @@ public class IncomingObject : ScriptableObject
 
 		holdLine = ( GameObject ) Instantiate( heldLine, positionOfBar, Quaternion.identity );
 
-		lineRenderer = (SpriteRenderer)holdLine.GetComponent (typeof(SpriteRenderer));
+//		lineRenderer = (SpriteRenderer)holdLine.GetComponent (typeof(SpriteRenderer));
 
-		Debug.Log ("length per beat : " + lengthPerBeat);
-		Debug.Log (" original : " + originalLengthOfLine);
+//		Debug.Log ("length per beat : " + lengthPerBeat);
+//		Debug.Log (" original : " + originalLengthOfLine);
 		float scaleChangeOfLength = lengthOfBar / originalLengthOfLine;
 
 		//size line for beat length
@@ -320,6 +337,30 @@ public class IncomingObject : ScriptableObject
 
 		holdLine.transform.parent = musicObject.transform;
 		secondInputObject.transform.parent = musicObject.transform;
+
+		previousLineLength = lengthOfBar;
+
+	}
+
+	public void PositionAndScaleHeld( float remainingBeats )
+	{
+		if (remainingBeats > 0) 
+		{
+			Debug.Log (" line length : " + previousLineLength + ", line position : " + holdLine.transform.position + ",  input2 position : " + secondInputObject.transform.position);
+			float newDistanceAwayFromBar = remainingBeats * distancePerBeat;
+			
+			//resize and reposition line
+			float scaleChangeOfLength = newDistanceAwayFromBar / previousLineLength;
+			
+			previousLineLength = newDistanceAwayFromBar;
+			
+			holdLine.transform.localScale = new Vector3 ( holdLine.transform.localScale.x, holdLine.transform.localScale.y * scaleChangeOfLength, holdLine.transform.localScale.z );
+			
+			holdLine.transform.position = musicObject.transform.position + new Vector3 (0, newDistanceAwayFromBar / 2, 0);
+			
+			secondInputObject.transform.position = musicObject.transform.position + new Vector3 (0, newDistanceAwayFromBar, 0); 
+		}
+
 
 	}
 

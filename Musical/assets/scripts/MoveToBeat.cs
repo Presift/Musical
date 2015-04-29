@@ -109,9 +109,20 @@ public class MoveToBeat : MonoBehaviour {
 		}
 	}
 
-//	public void Continue
-//	void Continue(){
-//		transform.position += moveDirection * lerpSpeed * Time.deltaTime;
-//	}
+	public void SetPathToDestroySelf()
+	{
+		continueToDestructionPosition = true;
+		targetReached = true;
+		
+		//travel to destruction position
+		targetPosition = destroyPosition;
+		journeyLength = Vector3.Distance(startPosition, targetPosition);
+
+	}
+
+	public void SnapToBar()
+	{
+		transform.position = targetPosition;
+	}
 
 }

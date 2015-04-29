@@ -36,17 +36,30 @@ public class ShowFeedback : MonoBehaviour {
 		}
 	}
 
-	public void ShowSuccess( bool held )
+	public void ShowSuccess()
 	{
 		moveScript.targetReached = true;
 		moveScript.continueToDestructionPosition = false;
 
 		thisRenderer.sprite = correct;
 
-		if (!held) 
-		{
-			destroySelf = true;
-		}
+	
+		destroySelf = true;
+
+
+	}
+
+	public void UnsuccessfulHoldContinuesToDestruction()
+	{
+		moveScript.SetPathToDestroySelf ();
+	}
+
+	public void StartHold()
+	{
+		moveScript.targetReached = true;
+		moveScript.continueToDestructionPosition = false;
+
+		moveScript.SnapToBar ();
 
 	}
 
