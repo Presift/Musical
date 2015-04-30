@@ -7,14 +7,17 @@ using System.Linq;
 public class CSVReader : MonoBehaviour 
 {
 	public TextAsset csvFile; 
+//	public GameData 
 	//	public Logic logic;
 	public List< List<float> > levelingInfo;
 
 
 	
-	public void Start()
+	void Awake()
 	{
 		string[,] grid = null;
+
+		GameData.dataControl.Load ();
 
 		//if two player and is second player's turn
 		if (GameData.dataControl.twoPlayer && GameData.dataControl.player1TurnComplete ) 
@@ -30,14 +33,10 @@ public class CSVReader : MonoBehaviour
 
 		if( grid != null )
 		{
-//			Debug.Log ("csvreader");
-//			DebugOutputGrid (grid);
 			
 			levelingInfo = OutputLevelInfo (grid);
 			Debug.Log (" object count : " + levelingInfo.Count );
 		}
-
-
 		 
 	}
 	

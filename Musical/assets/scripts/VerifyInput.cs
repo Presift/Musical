@@ -18,10 +18,12 @@ public class VerifyInput : MonoBehaviour {
 	float beatOfInput;
 
 	Vector3 mouseDownPosition;
-	float minDistanceForSwipe = 1.0f;
+	float minDistanceForSwipe = 1.5f;
 
 
 	void Awake(){
+
+		Debug.Log ("verify ");
 		if ( !GameData.dataControl.player1TurnComplete && GameData.dataControl.twoPlayer ) 
 		{
 			readPlayerInput = true;
@@ -63,17 +65,6 @@ public class VerifyInput : MonoBehaviour {
 	}
 
 
-//	bool CheckInput()
-//	{
-//		float beats = metronome.currentPartialBeats;
-//		
-//		if( beats >= currentObject.startInput && beats <= currentObject.endInput &&  currentObject.currentInput == inputType.none  )
-//		{
-//			return true;
-//		}
-//		
-//		return false;
-//	}
 
 	bool WithinInputRange()
 	{

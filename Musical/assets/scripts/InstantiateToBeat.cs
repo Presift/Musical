@@ -37,8 +37,8 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	List<IncomingObject> musicObjects;
 
-	public float timeForEarlyResponse = .1f;
-	public float timeForLateResponse = .08f;
+	public float timeForEarlyResponse = .15f;
+	public float timeForLateResponse = .15f;
 
 	int currentTurn = 0;
 
@@ -49,11 +49,12 @@ public class InstantiateToBeat : MonoBehaviour {
 	public Sprite swipeRight;
 	public Sprite swipeDown;
 	public Sprite swipeUp;
-//	public Sprite upSprite;
+
 
 
 	void Awake (){
 
+		Debug.Log ("instantiate ");
 		tap = (GameObject)Resources.Load("Tap");
 		swipe = (GameObject)Resources.Load ("Swipe");
 		holdLine = (GameObject)Resources.Load ("Held Line");

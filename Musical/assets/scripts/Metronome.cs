@@ -25,7 +25,7 @@ public class Metronome : MonoBehaviour {
 	public float previousSmoothedBeat = 0;
 	
 	private float audioVolume;
-	public int turnTime = 45;
+
 
 	public float holdTime = 0;
 
@@ -35,9 +35,14 @@ public class Metronome : MonoBehaviour {
 	public bool fadeOut = true;
 	float fadeOutRate = 1.01f;
 
+	void Awake ()
+	{
+		Debug.Log ("metronome");
+	}
 
 	// Use this for initialization
 	void Start () {
+
 		GetComponent<AudioSource>().Play();
 		bps = bpm/60;
 		GetComponent<AudioSource>().PlayDelayed(delayTime);
@@ -47,26 +52,16 @@ public class Metronome : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		if (Time.time > turnTime) 
-		{
-			//fade out music
 
-			//if player 1 turn of 2 players
-			if( GameData.dataControl.twoPlayer && !GameData.dataControl.player1TurnComplete )
-			{
-				GameData.dataControl.player1TurnComplete = true;
-				Application.LoadLevel( "NEWGAME");
-			}
-			else if( GameData.dataControl.twoPlayer && GameData.dataControl.player1TurnComplete )
-			{
-				//destroy data
-			}
-			//end turn
-		}
 
 		if( fadeIn )
 		{
 			FadeIn();
+		}
+
+		if( fadeOut )
+		{
+			FadeOut();
 		}
 
 
@@ -122,8 +117,15 @@ public class Metronome : MonoBehaviour {
 	{
 		if(audioVolume > .1)
 		{
-			audioVolume -= .1f * Time.deltaTime;
+			fadeOutRate *= fadeOutRate;
+
+			audioVolume -= .1f * fadeOutRate * Time.deltaTime;
 			GetComponent<AudioSource>().volume = audioVolume;
+		}
+		else
+		{
+			fadeOut = false;
+			fadeOutRate = 1.1f;
 		}
 	}
 

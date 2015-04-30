@@ -10,6 +10,7 @@ public class GameData : MonoBehaviour {
 	
 	public static GameData dataControl;
 
+
 	public TextAsset playerComposedData;
 
 	public string composerInput = "/composerInput.txt";
@@ -17,17 +18,21 @@ public class GameData : MonoBehaviour {
 
 	public bool twoPlayer;
 	public bool player1TurnComplete;
+	public bool player2TurnComplete;
 
 	void Awake(){
+
 		if(dataControl == null)
 		{
 			DontDestroyOnLoad(gameObject);
 			dataControl = this;
 		}
+
 		else if(dataControl != this)
 		{
 			Destroy(gameObject);
 		}
+
 		Debug.Log ("player turn set ");
 		PlayerTurn ();
 	}
@@ -42,7 +47,6 @@ public class GameData : MonoBehaviour {
 		if (System.IO.File.Exists (GetFullPath (composerInput))) 
 		{
 			player1TurnComplete = true;
-//			playerComposedData = GetFullPath( composerInput );
 		}
 
 		else
@@ -80,45 +84,31 @@ public class GameData : MonoBehaviour {
 	public void Save()
 	{
 		
-//		StreamWriter file = new StreamWriter (GetFullPath (dataFile));
-//		
-//		PlayerData data = new PlayerData();
-//		data.previousFinalLevel = previousFinalLevel;
-//		data.debugOn = debugOn;
-//		data.consecutiveModusTollensIncorrect = consecutiveModusTollensIncorrect;
-//		
-//		file.WriteLine ( data.previousFinalLevel );
-//		file.WriteLine (data.debugOn);
-//		file.WriteLine (data.consecutiveModusTollensIncorrect);
-//		file.WriteLine (data.fitTestTaken);
-//		file.WriteLine (data.shortGame);
-//		
-//		file.Close ();
+		StreamWriter file = new StreamWriter (GetFullPath (gameSetUp));
+		
+		PlayerData data = new PlayerData();
+
+		data.twoPlayer = twoPlayer;
+		
+		file.WriteLine ( data.twoPlayer );
+		
+		file.Close ();
 		
 	}
 
 	public void Load()
 	{
-//		if(File.Exists (GetFullPath( dataFile )))
-//		{
-//			string filePath = GetFullPath( dataFile );
+		if(File.Exists (GetFullPath( gameSetUp )))
+		{
+			string filePath = GetFullPath( gameSetUp );
 //			Debug.Log (Application.persistentDataPath);
-//			
-//			StreamReader data = new StreamReader( filePath );
-//			
-//			//			previousFinalLevel = Convert.ToInt32( data.ReadLine() );
-//			previousFinalLevel = float.Parse( data.ReadLine ());
-//			
-//			debugOn = Convert.ToBoolean( data.ReadLine ());
-//			
-//			consecutiveModusTollensIncorrect = Convert.ToInt32( data.ReadLine() );
-//			
-//			fitTestTaken = Convert.ToBoolean( data.ReadLine ());
-//			
-//			shortGame = Convert.ToBoolean( data.ReadLine ());
-//			
-//			data.Close ();
-//		}
+			
+			StreamReader data = new StreamReader( filePath );
+					
+			twoPlayer = Convert.ToBoolean( data.ReadLine ());
+			
+			data.Close ();
+		}
 		
 	}
 
@@ -133,9 +123,6 @@ public class GameData : MonoBehaviour {
 
 class PlayerData
 {
-	public float previousFinalLevel;
-	public bool debugOn;
-	public int consecutiveModusTollensIncorrect;
-	public bool fitTestTaken;
-	public bool shortGame;
+	public bool twoPlayer;
+
 }
