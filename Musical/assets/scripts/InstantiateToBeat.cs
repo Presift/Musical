@@ -6,6 +6,9 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	public Metronome metronome;
 	public VerifyInput input;
+	public CSVReader text;
+
+
 	float instantiationTimeBuffer = 5;
 	
 	float arrivalBeat;
@@ -13,26 +16,25 @@ public class InstantiateToBeat : MonoBehaviour {
 	float instantiationFrequency = 4;
 	
 	GameObject tap;
-//	GameObject tapAndHold;
+
 	GameObject swipe;
-//	GameObject swipeAndHold;
+
 	GameObject endHold;
 	GameObject holdLine;
 
 	float lengthPerBeat;
 	float originalLineLength;
-
-//	GameObject objectToInstantiate;
+	
 
 	public List< Vector3 > startPositions;
-//	Vector3 startPosition = new Vector3( 0, 6.25f , 0 );
+
 	Vector3 targetPosition;
 	Vector3 destroyPosition;
 	
 	public GameObject target;
-	
-//	float widthOfTarget;
-	public List<Vector3> arrivalBeats;
+
+	public List<List<float>> beatsAndInputs;
+
 	List<IncomingObject> musicObjects;
 
 	public float timeForEarlyResponse = .1f;
@@ -42,8 +44,13 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	public IncomingObject nextObject;
 
-	Sprite tapSprite;
-//	Sprite upSprite;
+	public Sprite tapSprite;
+	public Sprite swipeLeft;
+	public Sprite swipeRight;
+	public Sprite swipeDown;
+	public Sprite swipeUp;
+//	public Sprite upSprite;
+
 
 	void Awake (){
 
@@ -52,65 +59,60 @@ public class InstantiateToBeat : MonoBehaviour {
 		holdLine = (GameObject)Resources.Load ("Held Line");
 		endHold = (GameObject)Resources.Load ("EndHold");
 
-		SpriteRenderer tapRenderer = (SpriteRenderer)tap.GetComponent (typeof(SpriteRenderer));
-		tapSprite = tapRenderer.sprite;
 	}
 
 	void Start () {
 
-		ResizeWidthOfHeldLine ();
+		if( !input.readPlayerInput )
+		{
+			beatsAndInputs = text.levelingInfo;
+			
+			ResizeWidthOfHeldLine ();
+			
+			targetPosition = target.transform.position;
+			destroyPosition = targetPosition - new Vector3 (0, 2, 0);
+			
+			CreateMusicalObjects ();
+			
+			input.musicalObjects = musicObjects;
+			input.currentObject = musicObjects [0];
+			
+			nextObject = musicObjects [currentTurn];
+			
+			arrivalBeat = nextObject.arrivalBeat;
+		}
 
-		targetPosition = target.transform.position;
-		destroyPosition = targetPosition - new Vector3 (0, 2, 0);
-
-		CreateMusicalObjects ();
-
-		input.musicalObjects = musicObjects;
-		input.currentObject = musicObjects [0];
-
-
-		
-
-
-		nextObject = musicObjects [currentTurn];
-
-		arrivalBeat = nextObject.arrivalBeat;
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	
-		//if time to instantiate new object
-		if( metronome.currentPartialBeats > ( arrivalBeat - instantiationTimeBuffer) )
+		if( !input.readPlayerInput )
 		{
-			nextObject.Activate ( true );
-
-			currentTurn ++;
-
-			if( currentTurn < musicObjects.Count )
+			//if time to instantiate new object
+			if( metronome.currentPartialBeats > ( arrivalBeat - instantiationTimeBuffer) )
 			{
-				nextObject = musicObjects [currentTurn];
-
-				arrivalBeat = nextObject.arrivalBeat;
-
+				nextObject.Activate ( true );
+				
+				currentTurn ++;
+				
+				if( currentTurn < musicObjects.Count )
+				{
+					nextObject = musicObjects [currentTurn];
+					
+					arrivalBeat = nextObject.arrivalBeat;
+					
+				}
+				else
+				{
+					arrivalBeat = 10000;
+				}
+				
 			}
-			else
-			{
-				arrivalBeat = 10000;
-			}
-			
 		}
 
 	}
 
-//	void SetNewLineTransform( float beatsHeld, GameObject heldLine, Vector3 bottomOfLine )
-//	{
-//		float newLengthOfLine = beatsHeld * lengthPerBeat;
-//
-//		float currentLengthOfLine = originalLineLength;
-//
-//
-//	}
 
 	void ResizeWidthOfHeldLine()
 	{
@@ -139,16 +141,16 @@ public class InstantiateToBeat : MonoBehaviour {
 		musicObjects = new List<IncomingObject> ();
 		int positionIndex = 0;
 
-		for( int i = 0; i < arrivalBeats.Count; i ++ )
+		for( int i = 0; i < beatsAndInputs.Count; i ++ )
 		{
-			float onTargetBeat = arrivalBeats[ i ].x;
+			float onTargetBeat = beatsAndInputs[ i ][ 0 ];
 			float startOfInitialInput = onTargetBeat - ( timeForEarlyResponse * (metronome.bpm / 60 ));
 
 			float endOfInitialInput = onTargetBeat + ( timeForLateResponse * (metronome.bpm / 60 ));
 
-			float beatsToHold = arrivalBeats[ i ].z;
+			float beatsToHold = beatsAndInputs[ i ][ 1 ] - onTargetBeat;
 
-			int typeOfObject = ( int ) arrivalBeats[ i ].y;
+			int typeOfObject = ( int ) beatsAndInputs[ i ][ 2 ];
 
 			if( positionIndex == startPositions.Count )
 			{
@@ -158,13 +160,13 @@ public class InstantiateToBeat : MonoBehaviour {
 			Vector3 startPosition = startPositions[ positionIndex ];
 			positionIndex ++;
 
-			IncomingObject musicObject = new IncomingObject( typeOfObject, startOfInitialInput, endOfInitialInput, onTargetBeat, beatsToHold, GetUpcomingObject( typeOfObject), i );
+			IncomingObject musicObject = new IncomingObject( typeOfObject, tap, GetSprite( typeOfObject ), startOfInitialInput, endOfInitialInput, onTargetBeat, beatsToHold, i );
 
 			musicObject.CreateHeadOfObject( metronome, startPosition, targetPosition, destroyPosition );
 
 			if( musicObject.held )
 			{
-				musicObject.CreateHeldObject( holdLine, endHold, tapSprite, lengthPerBeat, originalLineLength );
+				musicObject.CreateHeldObject( holdLine, endHold, lengthPerBeat, originalLineLength );
 			}
 //
 			musicObjects.Add ( musicObject );
@@ -173,6 +175,26 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	}
 
+	Sprite GetSprite( int index )
+	{
+		switch( index )
+		{
+		case 0:
+			return tapSprite;
+		case 1:
+			return swipeLeft;
+		case 2:
+			return swipeRight;
+		case 3:
+			return swipeDown;
+		case 4:
+			return swipeUp;
+		default:
+			Debug.Log (" invalid index ");
+			//			return inputType.none;
+			return tapSprite;
+		}
+	}
 
 	GameObject GetUpcomingObject( int index )
 	{
@@ -208,7 +230,7 @@ public class IncomingObject : ScriptableObject
 	
 	public float endHold;
 	public GameObject holdLine;
-//	SpriteRenderer lineRenderer;
+
 	float previousLineLength;
 	public GameObject secondInputObject;
 	public bool held;
@@ -220,6 +242,7 @@ public class IncomingObject : ScriptableObject
 	public float arrivalBeat;
 
 	public GameObject prefab;
+	public Sprite mainSprite;
 
 	public GameObject musicObject;
 	public MoveToBeat moveScript;
@@ -230,7 +253,7 @@ public class IncomingObject : ScriptableObject
 	public Vector3 startPosition;
 
 	
-	public IncomingObject( int typeOfInput, float start, float end, float arriveBeat, float beatsHeld, GameObject newObject, int indexNum )
+	public IncomingObject( int typeOfInput, GameObject newPrefab, Sprite mainInteractionSprite, float start, float end, float arriveBeat, float beatsHeld, int indexNum )
 	{
 		expected = GetInputType( typeOfInput );
 		currentInput = inputType.none;
@@ -240,18 +263,18 @@ public class IncomingObject : ScriptableObject
 		endInput = end;
 
 		arrivalBeat = arriveBeat;
-//		Debug.Log (" arrival beat set to : " + arriveBeat);
+
 		beatsToHold = beatsHeld;
 
 		endHold = beatsHeld + arrivalBeat;
 
-		prefab = newObject;
+		prefab = newPrefab;
+		mainSprite = mainInteractionSprite;
 
 		index = indexNum;
 
 		isBeingHeld = false;
 
-//		GameObject newThing = ( GameObject ) Instantiate
 		if( beatsToHold > 1 )
 		{
 			held = true;
@@ -281,7 +304,13 @@ public class IncomingObject : ScriptableObject
 		// instantiate object
 		musicObject = ( GameObject ) Instantiate( prefab, startPosition, Quaternion.identity );
 		musicObject.name += index;
-		
+
+		//if not a tap object  
+		if (!held && expected != inputType.tap) 
+		{
+			SpriteRenderer mainRenderer = ( SpriteRenderer ) musicObject.GetComponent( typeof( SpriteRenderer ));
+			mainRenderer.sprite = mainSprite;
+		}
 		moveScript = ( MoveToBeat ) musicObject.GetComponent(typeof( MoveToBeat ));
 		feedbackScript = ( ShowFeedback ) musicObject.GetComponent(typeof( ShowFeedback ));
 		
@@ -294,7 +323,7 @@ public class IncomingObject : ScriptableObject
 
 	}
 
-	public void CreateHeldObject( GameObject heldLine, GameObject tailPrefab, Sprite tapSprite, float lengthPerBeat, float originalLengthOfLine  )
+	public void CreateHeldObject( GameObject heldLine, GameObject tailPrefab, float lengthPerBeat, float originalLengthOfLine  )
 	{
 		distancePerBeat = lengthPerBeat;
 
@@ -308,26 +337,15 @@ public class IncomingObject : ScriptableObject
 		//set sprites for head and tail objects
 		if( expected != inputType.tap )
 		{
-			SpriteRenderer mainInputRenderer = ( SpriteRenderer ) musicObject.GetComponent( typeof( SpriteRenderer ));
-			Sprite mainInputSprite = mainInputRenderer.sprite;
-
-	
 			//set tail to sprite in head
 			SpriteRenderer tailRenderer = ( SpriteRenderer ) secondInputObject.GetComponent( typeof( SpriteRenderer ));
-			tailRenderer.sprite = mainInputSprite;
-			
-			//set head to tap
-			mainInputRenderer.sprite = tapSprite;
+			tailRenderer.sprite = mainSprite;
 		}
 
 		//instantiate new hold line and resize
 
 		holdLine = ( GameObject ) Instantiate( heldLine, positionOfBar, Quaternion.identity );
 
-//		lineRenderer = (SpriteRenderer)holdLine.GetComponent (typeof(SpriteRenderer));
-
-//		Debug.Log ("length per beat : " + lengthPerBeat);
-//		Debug.Log (" original : " + originalLengthOfLine);
 		float scaleChangeOfLength = lengthOfBar / originalLengthOfLine;
 
 		//size line for beat length
@@ -346,6 +364,7 @@ public class IncomingObject : ScriptableObject
 	{
 		if (remainingBeats > 0) 
 		{
+			Debug.Log (" remaining beats : " + remainingBeats );
 			Debug.Log (" line length : " + previousLineLength + ", line position : " + holdLine.transform.position + ",  input2 position : " + secondInputObject.transform.position);
 			float newDistanceAwayFromBar = remainingBeats * distancePerBeat;
 			
@@ -376,6 +395,7 @@ public class IncomingObject : ScriptableObject
 		}
 	}
 	
+
 	inputType GetInputType( int typeOfInput )
 	{
 		switch( typeOfInput )
@@ -387,11 +407,11 @@ public class IncomingObject : ScriptableObject
 		case 3:
 			return inputType.swipeRight;
 		case 4:
-			return inputType.swipeUp;
-		case 5:
 			return inputType.swipeDown;
+		case 5:
+			return inputType.swipeUp;
 		default:
-			return inputType.none;
+			return inputType.tap;
 		}
 	}
 	

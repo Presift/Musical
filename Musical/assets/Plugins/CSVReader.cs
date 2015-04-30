@@ -1,50 +1,88 @@
-﻿/*
-	CSVReader by Dock. (24/8/11)
-	http://starfruitgames.com
- 
-	usage: 
-	CSVReader.SplitCsvGrid(textString)
- 
-	returns a 2D string array. 
- 
-	Drag onto a gameobject for a demo of CSV parsing.
-*/
-
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq; 
+
 
 public class CSVReader : MonoBehaviour 
 {
 	public TextAsset csvFile; 
+	//	public Logic logic;
+	public List< List<float> > levelingInfo;
+
+
+	
 	public void Start()
 	{
-		string[,] grid = SplitCsvGrid(csvFile.text);
-		Debug.Log("size = " + (1+ grid.GetUpperBound(0)) + "," + (1 + grid.GetUpperBound(1))); 
+		string[,] grid = null;
+
+		//if two player and is second player's turn
+		if (GameData.dataControl.twoPlayer && GameData.dataControl.player1TurnComplete ) 
+		{
+			grid = SplitCsvGrid(GameData.dataControl.ReadPlayerComposition());
+
 		
-		DebugOutputGrid(grid); 
+		}
+		else if( !GameData.dataControl.twoPlayer )
+		{
+			grid = SplitCsvGrid(csvFile.text);
+		}
+
+		if( grid != null )
+		{
+//			Debug.Log ("csvreader");
+//			DebugOutputGrid (grid);
+			
+			levelingInfo = OutputLevelInfo (grid);
+			Debug.Log (" object count : " + levelingInfo.Count );
+		}
+
+
+		 
 	}
+	
+	
 	
 	// outputs the content of a 2D array, useful for checking the importer
 	static public void DebugOutputGrid(string[,] grid)
 	{
 		string textOutput = ""; 
-
+		
 		for (int y = 0; y < grid.GetUpperBound(1); y++) {	
 			for (int x = 0; x < grid.GetUpperBound(0); x++) {
-//				Debug.Log ("y : " + y);
-//				Debug.Log ("x : " + x);
+
 				textOutput += grid[x,y]; 
 				textOutput += "|";
-//				Debug.Log(grid[x ,y]);
 			}
 			textOutput += "\n"; 
 		}
 		Debug.Log(textOutput);
 	}
-
 	
+	static public List< List<float> > OutputLevelInfo(string[,] grid)
+	{
+		List< List<float> > levelingInfo = new List<List<float>> ();
+		
+		
+		for (int y = 1; y < grid.GetUpperBound(1); y++) 
+		{	
+			List< float > singleLevelInfo = new List<float>();
+			
+			for (int x = 0; x < grid.GetUpperBound(0); x++) 
+			{
 
+				float value = float.Parse( grid[x,y] );
+//				Debug.Log (value);
+				singleLevelInfo.Add ( value );
+
+			}
+			levelingInfo.Add ( singleLevelInfo );
+		}
+		
+		return levelingInfo;
+	}
+	
+	
 	// splits a CSV file into a 2D string array
 	static public string[,] SplitCsvGrid(string csvText)
 	{
@@ -55,8 +93,7 @@ public class CSVReader : MonoBehaviour
 		{
 			string[] row = SplitCsvLine( lines[i] ); 
 			width = Mathf.Max(width, row.Length);
-//			Debug.Log (width);
-//			Debug.Log (lines.Length);
+
 		}
 		
 		// creates new 2D string grid to output to

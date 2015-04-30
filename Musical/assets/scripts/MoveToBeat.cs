@@ -21,13 +21,6 @@ public class MoveToBeat : MonoBehaviour {
 	public float startBeat;
 	private float endBeat;
 	private float journeyLength;
-	
-//	public Vector3 moveDirection;
-
-	
-	//temporary public values
-//	public float arrivalBeat;
-
 
 	// Use this for initialization
 	void Start () {

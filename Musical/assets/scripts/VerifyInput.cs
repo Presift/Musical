@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class VerifyInput : MonoBehaviour {
 
 	public Metronome metronome;
+	public bool readPlayerInput;
 
 	public List< IncomingObject > musicalObjects;
 
@@ -12,15 +13,25 @@ public class VerifyInput : MonoBehaviour {
 
 	int currentObjectIndex = 0;
 
-
-//	public bool checkInput;
+//	public bool twoPlayer;
 
 	float beatOfInput;
 
 	Vector3 mouseDownPosition;
 	float minDistanceForSwipe = 1.0f;
-//	float min
 
+
+	void Awake(){
+		if ( !GameData.dataControl.player1TurnComplete && GameData.dataControl.twoPlayer ) 
+		{
+			readPlayerInput = true;
+		}
+		else
+		{
+			readPlayerInput = false;
+		}
+
+	}
 	// Use this for initialization
 	void Start () {
 	
@@ -29,36 +40,40 @@ public class VerifyInput : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 
-		if( EndInputForCurrentObject() && currentObjectIndex < ( musicalObjects.Count - 1 ))
+		if( !readPlayerInput )
 		{
-			currentObjectIndex ++;
-			currentObject = musicalObjects[ currentObjectIndex ];
-		}
-
-		//if current object is being held
-		if( !currentObject.isBeingHeld && currentObject.held )
-		{
-			//if remaining beats to hold and not expecting swipe
-			if( WithinInputRange() && currentObject.expected == inputType.tap )
+			if( EndInputForCurrentObject() && currentObjectIndex < ( musicalObjects.Count - 1 ))
 			{
-				currentObject.feedbackScript.ShowSuccess();
+				currentObjectIndex ++;
+				currentObject = musicalObjects[ currentObjectIndex ];
 			}
-			currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+			
+			//if current object is being held
+			if( currentObject.isBeingHeld && currentObject.held )
+			{
+				//if remaining beats to hold and not expecting swipe
+				if( WithinInputRange() && currentObject.expected == inputType.tap )
+				{
+					currentObject.feedbackScript.ShowSuccess();
+				}
+				currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+			}
 		}
+
 	}
 
 
-	bool CheckInput()
-	{
-		float beats = metronome.currentPartialBeats;
-		
-		if( beats >= currentObject.startInput && beats <= currentObject.endInput &&  currentObject.currentInput == inputType.none  )
-		{
-			return true;
-		}
-		
-		return false;
-	}
+//	bool CheckInput()
+//	{
+//		float beats = metronome.currentPartialBeats;
+//		
+//		if( beats >= currentObject.startInput && beats <= currentObject.endInput &&  currentObject.currentInput == inputType.none  )
+//		{
+//			return true;
+//		}
+//		
+//		return false;
+//	}
 
 	bool WithinInputRange()
 	{
@@ -79,43 +94,125 @@ public class VerifyInput : MonoBehaviour {
 
 	void OnMouseDown()
 	{
-		Debug.Log (metronome.currentPartialBeats);
 		beatOfInput = metronome.currentPartialBeats;
 		mouseDownPosition = Input.mousePosition;
 
-		//if within input range of current object
-		if( WithinInputRange() )
+
+		if (!readPlayerInput) 
 		{
-			//if correct input is tap OR 
-			if( currentObject.expected == inputType.tap || ( currentObject.held && currentObject.isBeingHeld))
+			//if within input range of current object
+			if( WithinInputRange() )
 			{
-
-
-				if( currentObject.held )
+				//if correct input is tap OR 
+				if( currentObject.expected == inputType.tap ||  currentObject.held )
 				{
-
-					currentObject.feedbackScript.StartHold();
-					currentObject.UpdateInputStartEndRange();
-					currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
-
-//					Debug.Log ( 
+					
+					
+					if( currentObject.held )
+					{
+						currentObject.isBeingHeld = true;
+						currentObject.feedbackScript.StartHold();
+						currentObject.UpdateInputStartEndRange();
+						currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+						
+						//					Debug.Log ( 
+					}
+					else
+					{
+						// show successful feedback on musical object
+						currentObject.feedbackScript.ShowSuccess();
+					}
 				}
-				else
-				{
-					// show successful feedback on musical object
-					currentObject.feedbackScript.ShowSuccess();
-				}
+				
 			}
-
 		}
+
+
 
 	}
 
+	float GetClosestHalfBeat( float beat )
+	{
+		float closest = Mathf.Round (beat / .5f) * .5f; 
+		Debug.Log (closest);
+		return closest;
+	}
 
+	void EndOfInput()
+	{
+		float endBeat = metronome.currentPartialBeats;
+
+		float beatsHeld = endBeat - beatOfInput;
+
+		inputType swipe = DetermineSwipe (Input.mousePosition);
+
+		int interactionType = GetInputTypeAsInt (swipe);
+
+		if( readPlayerInput )
+		{
+			string saveData = "";
+			saveData += GetClosestHalfBeat( beatOfInput).ToString() + ",";
+			saveData += GetClosestHalfBeat( endBeat ).ToString() + ",";
+			saveData += interactionType.ToString() + ",";
+
+			GameData.dataControl.SavePerformanceStats (saveData);
+		}
+		if( !readPlayerInput )
+		{
+		
+			if (WithinInputRange ()) 
+			{
+				if( currentObject.expected == swipe )
+				{
+					
+					currentObject.feedbackScript.ShowSuccess();
+					
+				}
+
+				else if( currentObject.expected == inputType.tap && !currentObject.isBeingHeld )
+
+				{
+					currentObject.feedbackScript.ShowSuccess();
+				}
+			}
+			//if held object is let go early
+			else if( currentObject.held && currentObject.isBeingHeld )
+			{
+				currentObject.feedbackScript.UnsuccessfulHoldContinuesToDestruction();
+			}
+		
+		currentObject.isBeingHeld = false;
+
+		}
+
+
+	}
+
+	int GetInputTypeAsInt( inputType input )
+	{
+
+
+		switch ( input )
+		{
+		case inputType.none:
+			return 0;
+		case inputType.swipeLeft:
+			return 1;
+		case inputType.swipeRight:
+			return 2;
+		case inputType.swipeDown:
+			return 3;
+		case inputType.swipeUp:
+			return 4;
+		default:
+			return 0;
+
+		}
+	}
 
 	void OnMouseExit()
 	{
-		currentObject.isBeingHeld = false;
+		EndOfInput();
 	}
 			    
 
@@ -123,32 +220,13 @@ public class VerifyInput : MonoBehaviour {
 	{
 
 
-		inputType swipe = DetermineSwipe (Input.mousePosition);
+		EndOfInput ();
 
-		float beatsHeld = metronome.currentPartialBeats - beatOfInput;
-
-		if (WithinInputRange ()) 
-		{
-			if( currentObject.expected == swipe )
-			{
+		
 	
-				currentObject.feedbackScript.ShowSuccess();
 
-			}
-			else if( currentObject.expected == inputType.tap && !currentObject.isBeingHeld )
-			{
-				currentObject.feedbackScript.ShowSuccess();
-			}
-		}
-		//if held object is let go early
-		else if( currentObject.held && currentObject.isBeingHeld )
-		{
-			currentObject.feedbackScript.UnsuccessfulHoldContinuesToDestruction();
-		}
 
-		currentObject.isBeingHeld = false;
 
-		//if object should be held
 	}
 
 	inputType DetermineSwipe( Vector3 endPosition )
