@@ -5,18 +5,17 @@ public class ShowFeedback : MonoBehaviour {
 
 	public Sprite correct;
 	public Sprite incorrect;
-	
 
-//	public Metronome metronome;
 	public MoveToBeat moveScript;
 
 	SpriteRenderer thisRenderer;
 
 	bool destroySelf = false;
-	float timeUntilDestruction = .25f;
+	float timeUntilDestruction = .05f;
 
 	// Use this for initialization
 	void Start () {
+
 		thisRenderer = (SpriteRenderer)this.GetComponent (typeof(SpriteRenderer));
 	}
 	
@@ -41,12 +40,22 @@ public class ShowFeedback : MonoBehaviour {
 		moveScript.targetReached = true;
 		moveScript.continueToDestructionPosition = false;
 
-		thisRenderer.sprite = correct;
-
+		SetSprite (correct);
 	
+		TimeDestruction ();
+
+//		Debug.Log ("call to destroy self");
+
+	}
+
+	public void TimeDestruction()
+	{
 		destroySelf = true;
+	}
 
-
+	public void SetSprite( Sprite newSprite )
+	{
+		thisRenderer.sprite = newSprite;
 	}
 
 	public void UnsuccessfulHoldContinuesToDestruction()

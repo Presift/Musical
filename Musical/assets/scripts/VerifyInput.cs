@@ -6,6 +6,12 @@ public class VerifyInput : MonoBehaviour {
 
 	public Metronome metronome;
 	public bool readPlayerInput;
+	public InstantiateToBeat instantiate;
+
+	public Vector3 barCenter;
+	GameObject userCreatedObject;
+
+	public GameObject basicObject;
 
 	public List< IncomingObject > musicalObjects;
 
@@ -53,12 +59,16 @@ public class VerifyInput : MonoBehaviour {
 			//if current object is being held
 			if( currentObject.isBeingHeld && currentObject.held )
 			{
-				//if remaining beats to hold and not expecting swipe
-				if( WithinInputRange() && currentObject.expected == inputType.tap )
+				//reposition and rescale tail and train 
+				currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+
+				//if within range of second input and second input is not a swipe ( this means that player can hold too long and will still be successful )
+				if( WithinInputRange() && currentObject.expected == inputType.up )
 				{
 					currentObject.feedbackScript.ShowSuccess();
 				}
-				currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+
+
 			}
 		}
 
@@ -89,32 +99,30 @@ public class VerifyInput : MonoBehaviour {
 		mouseDownPosition = Input.mousePosition;
 
 
-		if (!readPlayerInput) 
-		{
+		if (!readPlayerInput) {
 			//if within input range of current object
-			if( WithinInputRange() )
-			{
+			if (WithinInputRange ()) {
 				//if correct input is tap OR 
-				if( currentObject.expected == inputType.tap )
-				{
+				if (currentObject.expected == inputType.tap) {
 					
 					
-					if( currentObject.held )
-					{
+					if (currentObject.held) {
 						currentObject.isBeingHeld = true;
-						currentObject.feedbackScript.StartHold();
-						currentObject.UpdateInputStartEndRange();
-						currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
+						currentObject.feedbackScript.StartHold ();
+						currentObject.UpdateInputStartEndRange ();
+						currentObject.PositionAndScaleHeld (currentObject.endHold - metronome.currentPartialBeats);
 						currentObject.expected = currentObject.secondInput;
-					}
-					else
-					{
+					} else {
 						// show successful feedback on musical object
-						currentObject.feedbackScript.ShowSuccess();
+						currentObject.feedbackScript.ShowSuccess ();
 					}
 				}
 				
 			}
+		} else 
+		{
+			//create basic music object at center of bar
+			userCreatedObject = ( GameObject ) Instantiate ( basicObject, barCenter, Quaternion.identity );
 		}
 
 
@@ -140,6 +148,15 @@ public class VerifyInput : MonoBehaviour {
 
 		if( readPlayerInput )
 		{
+			//set sprite
+			int swipeInt = GetInputTypeAsInt( swipe );
+			Sprite newSprite = instantiate.GetSprite( swipeInt );
+			//destroy user created object
+			ShowFeedback feedbackScript = (ShowFeedback ) userCreatedObject.GetComponent( typeof(ShowFeedback));
+			feedbackScript.SetSprite( newSprite );
+			feedbackScript.TimeDestruction();
+
+
 			float normalizedEndBeat = GetClosestHalfBeat( endBeat );
 			float normalizedStartBeat = GetClosestHalfBeat( beatOfInput );
 
@@ -160,16 +177,19 @@ public class VerifyInput : MonoBehaviour {
 		if( !readPlayerInput )
 		{
 		
+			Debug.Log (" received : " + swipe + ", expected : " + currentObject.expected );
+
 			if (WithinInputRange ()) 
 			{
-				Debug.Log (" received : " + swipe + ", expected : " + currentObject.expected );
+//				Debug.Log (" received : " + swipe + ", expected : " + currentObject.expected );
 				if( currentObject.expected == swipe )
 				{
-					if( swipe != inputType.tap && swipe != inputType.none )
+					if( swipe != inputType.tap && swipe != inputType.up )
 					{
 						Debug.Log ( swipe + " at " + metronome.currentPartialBeats );
 					}
 
+					Debug.Log ("ATTEMPTING TO DESTROY");
 					currentObject.feedbackScript.ShowSuccess();
 					
 				}
@@ -199,7 +219,7 @@ public class VerifyInput : MonoBehaviour {
 
 		switch ( input )
 		{
-		case inputType.none:
+		case inputType.tap:
 			return 0;
 		case inputType.swipeLeft:
 			return 1;
@@ -209,6 +229,8 @@ public class VerifyInput : MonoBehaviour {
 			return 3;
 		case inputType.swipeUp:
 			return 4;
+		case inputType.up:
+			return 5;
 		default:
 			return 0;
 
@@ -265,7 +287,7 @@ public class VerifyInput : MonoBehaviour {
 
 		}
 
-		return inputType.none;
+		return inputType.up;
 	}
 
 

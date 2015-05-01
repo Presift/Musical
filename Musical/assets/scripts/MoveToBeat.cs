@@ -36,6 +36,7 @@ public class MoveToBeat : MonoBehaviour {
 		}
 	}
 
+
 	public void CalculateAndSetValues( Vector3 startPos, Vector3 targetPos, Vector3 destroyPos, float arrivalBeat, float bpm ){
 
 		advanceBufferInBeats = advanceBufferInSeconds * (bpm/60);

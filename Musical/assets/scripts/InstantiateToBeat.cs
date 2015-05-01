@@ -64,6 +64,8 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	void Start () {
 
+		input.barCenter = target.transform.position;
+
 		if( !input.readPlayerInput )
 		{
 			beatsAndInputs = text.levelingInfo;
@@ -169,14 +171,15 @@ public class InstantiateToBeat : MonoBehaviour {
 			{
 				musicObject.CreateHeldObject( holdLine, endHold, lengthPerBeat, originalLineLength );
 			}
-//
+
+			Debug.Log ("first input : " + musicObject.firstInput + " second input : " + musicObject.secondInput );
 			musicObjects.Add ( musicObject );
 
 		}
 
 	}
 
-	Sprite GetSprite( int index )
+	public Sprite GetSprite( int index )
 	{
 		switch( index )
 		{
@@ -190,33 +193,16 @@ public class InstantiateToBeat : MonoBehaviour {
 			return swipeDown;
 		case 4:
 			return swipeUp;
+		case 5:
+			return tapSprite;
 		default:
 			Debug.Log (" invalid index ");
 			//			return inputType.none;
 			return tapSprite;
 		}
 	}
-
-	GameObject GetUpcomingObject( int index )
-	{
-		switch( index )
-		{
-		case 0:
-			return tap;
-//		case 1:
-//			return inputType.hold;
-		case 1:
-			return swipe;
-		case 2:
-			return swipe;
-		default:
-			Debug.Log (" invalid index ");
-//			return inputType.none;
-			return tap;
-		}
-	}
+	
 }
-
 
 
 public class IncomingObject : ScriptableObject
@@ -284,6 +270,11 @@ public class IncomingObject : ScriptableObject
 
 			firstInput = inputType.tap;
 			secondInput = GetInputType( typeOfInput );
+
+			if( secondInput == inputType.tap )
+			{
+				secondInput = inputType.up;
+			}
 		}
 		else
 		{
@@ -342,9 +333,11 @@ public class IncomingObject : ScriptableObject
 		secondInputObject = ( GameObject ) Instantiate( tailPrefab, positionOfTail, Quaternion.identity );
 
 		//set sprites for head and tail objects
-		if( expected != inputType.tap )
+		Debug.Log (" second input : " + secondInput);
+		if( secondInput != inputType.up )
 		{
 			//set tail to sprite in head
+
 			SpriteRenderer tailRenderer = ( SpriteRenderer ) secondInputObject.GetComponent( typeof( SpriteRenderer ));
 			tailRenderer.sprite = mainSprite;
 		}
@@ -417,6 +410,8 @@ public class IncomingObject : ScriptableObject
 			return inputType.swipeDown;
 		case 4:
 			return inputType.swipeUp;
+		case 5: 
+			return inputType.up;
 		default:
 			return inputType.tap;
 		}
@@ -424,4 +419,6 @@ public class IncomingObject : ScriptableObject
 	
 }
 
-public enum inputType  { tap, swipeLeft, swipeRight, swipeUp, swipeDown, none };
+public enum inputType  { tap, swipeLeft, swipeRight, swipeUp, swipeDown, up };
+
+

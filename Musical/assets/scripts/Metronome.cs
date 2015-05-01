@@ -72,6 +72,7 @@ public class Metronome : MonoBehaviour {
 		}
 
 		currentPartialBeats = BeatForSample(GetComponent<AudioSource>().timeSamples);           // total elapsed fractional beats, e.g. 2408.9974
+
 		deltaBeats = currentPartialBeats - previousPartialBeats;
 		wholeBeats = SmoothedBeatForSample(GetComponent<AudioSource>().timeSamples); // adjusted elapsed beats (int( with 20ms buffer, e.g. 2409
 		//	DebugBeatDiscrepancy(wholeBeats, previousSmoothedBeat );
@@ -85,8 +86,7 @@ public class Metronome : MonoBehaviour {
 
 		previousPartialBeats = currentPartialBeats;
 		previousSmoothedBeat = wholeBeats;
-		
-		//	Debug.Log(wholeBeats);
+
 		
 	}
 
