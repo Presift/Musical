@@ -7,8 +7,7 @@ using System.Linq;
 public class CSVReader : MonoBehaviour 
 {
 	public TextAsset csvFile; 
-//	public GameData 
-	//	public Logic logic;
+
 	public List< List<float> > levelingInfo;
 
 
@@ -22,6 +21,7 @@ public class CSVReader : MonoBehaviour
 		//if two player and is second player's turn
 		if (GameData.dataControl.twoPlayer && GameData.dataControl.player1TurnComplete ) 
 		{
+			Debug.Log ("reading player composition");
 			grid = SplitCsvGrid(GameData.dataControl.ReadPlayerComposition());
 
 		

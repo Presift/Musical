@@ -11,9 +11,9 @@ public class GameData : MonoBehaviour {
 	public static GameData dataControl;
 
 
-	public TextAsset playerComposedData;
+//	public TextAsset playerComposedData;
 
-	public string composerInput = "/composerInput.txt";
+	private string composerInput = "/composerInput.txt";
 	private string gameSetUp = "/playerInfo.txt";
 
 	public bool twoPlayer;
@@ -34,7 +34,7 @@ public class GameData : MonoBehaviour {
 		}
 
 		Debug.Log ("player turn set ");
-		PlayerTurn ();
+//		PlayerTurn ();
 	}
 	
 	void Start()
@@ -76,7 +76,7 @@ public class GameData : MonoBehaviour {
 
 		string composition = data.ReadToEnd ();
 
-//		Debug.Log (composition);
+		Debug.Log (filePath);
 		return composition;
 
 	}
@@ -89,8 +89,12 @@ public class GameData : MonoBehaviour {
 		PlayerData data = new PlayerData();
 
 		data.twoPlayer = twoPlayer;
-		
+		data.player1TurnComplete = player1TurnComplete;
+		data.player2TurnComplete = player2TurnComplete;
+
 		file.WriteLine ( data.twoPlayer );
+		file.WriteLine (data.player1TurnComplete);
+		file.WriteLine (data.player2TurnComplete);
 		
 		file.Close ();
 		
@@ -101,12 +105,14 @@ public class GameData : MonoBehaviour {
 		if(File.Exists (GetFullPath( gameSetUp )))
 		{
 			string filePath = GetFullPath( gameSetUp );
-//			Debug.Log (Application.persistentDataPath);
+			Debug.Log (filePath);
 			
 			StreamReader data = new StreamReader( filePath );
 					
 			twoPlayer = Convert.ToBoolean( data.ReadLine ());
-			
+			player1TurnComplete = Convert.ToBoolean( data.ReadLine ());
+			player2TurnComplete = Convert.ToBoolean( data.ReadLine ());
+
 			data.Close ();
 		}
 		
@@ -124,5 +130,7 @@ public class GameData : MonoBehaviour {
 class PlayerData
 {
 	public bool twoPlayer;
+	public bool player1TurnComplete;
+	public bool player2TurnComplete;
 
 }

@@ -13,7 +13,7 @@ public class VerifyInput : MonoBehaviour {
 
 	int currentObjectIndex = 0;
 
-//	public bool twoPlayer;
+	float previousEndBeat = 0;
 
 	float beatOfInput;
 
@@ -23,7 +23,7 @@ public class VerifyInput : MonoBehaviour {
 
 	void Awake(){
 
-		Debug.Log ("verify ");
+//		Debug.Log ("verify ");
 		if ( !GameData.dataControl.player1TurnComplete && GameData.dataControl.twoPlayer ) 
 		{
 			readPlayerInput = true;
@@ -95,7 +95,7 @@ public class VerifyInput : MonoBehaviour {
 			if( WithinInputRange() )
 			{
 				//if correct input is tap OR 
-				if( currentObject.expected == inputType.tap ||  currentObject.held )
+				if( currentObject.expected == inputType.tap )
 				{
 					
 					
@@ -105,8 +105,7 @@ public class VerifyInput : MonoBehaviour {
 						currentObject.feedbackScript.StartHold();
 						currentObject.UpdateInputStartEndRange();
 						currentObject.PositionAndScaleHeld( currentObject.endHold - metronome.currentPartialBeats );
-						
-						//					Debug.Log ( 
+						currentObject.expected = currentObject.secondInput;
 					}
 					else
 					{
@@ -125,7 +124,7 @@ public class VerifyInput : MonoBehaviour {
 	float GetClosestHalfBeat( float beat )
 	{
 		float closest = Mathf.Round (beat / .5f) * .5f; 
-		Debug.Log (closest);
+//		Debug.Log (closest);
 		return closest;
 	}
 
@@ -136,26 +135,41 @@ public class VerifyInput : MonoBehaviour {
 		float beatsHeld = endBeat - beatOfInput;
 
 		inputType swipe = DetermineSwipe (Input.mousePosition);
-
+//		Debug.Log (" swipe : " + swipe);
 		int interactionType = GetInputTypeAsInt (swipe);
 
 		if( readPlayerInput )
 		{
+			float normalizedEndBeat = GetClosestHalfBeat( endBeat );
+			float normalizedStartBeat = GetClosestHalfBeat( beatOfInput );
+
 			string saveData = "";
-			saveData += GetClosestHalfBeat( beatOfInput).ToString() + ",";
-			saveData += GetClosestHalfBeat( endBeat ).ToString() + ",";
+			saveData += normalizedStartBeat + ",";
+			saveData += normalizedEndBeat + ",";
 			saveData += interactionType.ToString() + ",";
 
-			GameData.dataControl.SavePerformanceStats (saveData);
+			//if previous input does not overlap with current input
+			if( normalizedStartBeat > previousEndBeat )
+			{
+				//record data
+				GameData.dataControl.SavePerformanceStats (saveData);
+				previousEndBeat = normalizedEndBeat;
+			}
+
 		}
 		if( !readPlayerInput )
 		{
 		
 			if (WithinInputRange ()) 
 			{
+				Debug.Log (" received : " + swipe + ", expected : " + currentObject.expected );
 				if( currentObject.expected == swipe )
 				{
-					
+					if( swipe != inputType.tap && swipe != inputType.none )
+					{
+						Debug.Log ( swipe + " at " + metronome.currentPartialBeats );
+					}
+
 					currentObject.feedbackScript.ShowSuccess();
 					
 				}

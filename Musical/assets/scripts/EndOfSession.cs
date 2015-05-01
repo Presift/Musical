@@ -13,14 +13,16 @@ public class EndOfSession : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-	
+		Debug.Log ("read");
 	}
 
 	// Update is called once per frame
 	void Update () {
 	
-		if (Time.time > turnTime && !sessionCompleted ) 
+		if ( Time.timeSinceLevelLoad > turnTime && !sessionCompleted ) 
 		{
+
+			Debug.Log (" time : " + Time.timeSinceLevelLoad );
 			//fade out music
 			metronome.fadeOut = true;
 
@@ -29,6 +31,8 @@ public class EndOfSession : MonoBehaviour {
 			//if player 1 turn of 2 players
 			if( GameData.dataControl.twoPlayer && !GameData.dataControl.player1TurnComplete )
 			{
+				GameData.dataControl.player1TurnComplete = true;
+				GameData.dataControl.Save ();
 
 				canvas.ShowPlayer1Complete();
 			}
@@ -36,7 +40,11 @@ public class EndOfSession : MonoBehaviour {
 			{
 				canvas.ShowPlayer2Complete();
 			}
-			//end turn
+			else 
+			{
+				canvas.EndOfSinglePlayer();
+			}
+		
 		}
 	}
 }

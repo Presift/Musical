@@ -54,7 +54,7 @@ public class InstantiateToBeat : MonoBehaviour {
 
 	void Awake (){
 
-		Debug.Log ("instantiate ");
+//		Debug.Log ("instantiate ");
 		tap = (GameObject)Resources.Load("Tap");
 		swipe = (GameObject)Resources.Load ("Swipe");
 		holdLine = (GameObject)Resources.Load ("Held Line");
@@ -221,9 +221,11 @@ public class InstantiateToBeat : MonoBehaviour {
 
 public class IncomingObject : ScriptableObject
 {
-	
+	public inputType firstInput;
+	public inputType secondInput;
+
 	public inputType expected;
-	public inputType currentInput;
+//	public inputType currentInput;
 	public bool inputRangeIsForHead;
 
 	public float startInput;
@@ -256,8 +258,8 @@ public class IncomingObject : ScriptableObject
 	
 	public IncomingObject( int typeOfInput, GameObject newPrefab, Sprite mainInteractionSprite, float start, float end, float arriveBeat, float beatsHeld, int indexNum )
 	{
-		expected = GetInputType( typeOfInput );
-		currentInput = inputType.none;
+//		expected = GetInputType( typeOfInput );
+
 		inputRangeIsForHead = true;
 
 		startInput = start;
@@ -280,12 +282,16 @@ public class IncomingObject : ScriptableObject
 		{
 			held = true;
 
-			//if main music 
+			firstInput = inputType.tap;
+			secondInput = GetInputType( typeOfInput );
 		}
 		else
 		{
 			held = false;
+			firstInput = GetInputType( typeOfInput );
 		}
+
+		expected = firstInput;
 
 	}
 
@@ -365,8 +371,8 @@ public class IncomingObject : ScriptableObject
 	{
 		if (remainingBeats > 0) 
 		{
-			Debug.Log (" remaining beats : " + remainingBeats );
-			Debug.Log (" line length : " + previousLineLength + ", line position : " + holdLine.transform.position + ",  input2 position : " + secondInputObject.transform.position);
+//			Debug.Log (" remaining beats : " + remainingBeats );
+//			Debug.Log (" line length : " + previousLineLength + ", line position : " + holdLine.transform.position + ",  input2 position : " + secondInputObject.transform.position);
 			float newDistanceAwayFromBar = remainingBeats * distancePerBeat;
 			
 			//resize and reposition line
@@ -403,13 +409,13 @@ public class IncomingObject : ScriptableObject
 		{
 		case 0:
 			return inputType.tap;
-		case 2:
+		case 1:
 			return inputType.swipeLeft;
-		case 3:
+		case 2:
 			return inputType.swipeRight;
-		case 4:
+		case 3:
 			return inputType.swipeDown;
-		case 5:
+		case 4:
 			return inputType.swipeUp;
 		default:
 			return inputType.tap;

@@ -37,7 +37,7 @@ public class Metronome : MonoBehaviour {
 
 	void Awake ()
 	{
-		Debug.Log ("metronome");
+//		Debug.Log ("metronome");
 	}
 
 	// Use this for initialization
@@ -126,6 +126,9 @@ public class Metronome : MonoBehaviour {
 		{
 			fadeOut = false;
 			fadeOutRate = 1.1f;
+
+			audioVolume = 0;
+			GetComponent<AudioSource>().volume = audioVolume;
 		}
 	}
 

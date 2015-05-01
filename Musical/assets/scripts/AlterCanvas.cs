@@ -34,27 +34,49 @@ public class AlterCanvas : MonoBehaviour {
 		newSinglePlayer.gameObject.SetActive (true);
 	}
 
-//	public void HidePlayer1Complete()
-//	{
-//		multiPlayerPanel.SetActive (false);
-//	}
+	public void EndOfSinglePlayer()
+	{
+		multiPlayerPanel.SetActive (true);
+		newMultiPlayer.gameObject.SetActive (true);
+		newSinglePlayer.gameObject.SetActive (true);
+		replay.gameObject.SetActive (true);
+	}
 
 	public void StartPlayer2Turn()
 	{
+		Debug.Log ("start player 2 ");
+		multiPlayerPanel.SetActive (false);
+
 		Application.LoadLevel ("NEWGAME");
 	}
 
 	public void NewMultiPlayer()
 	{
+		Debug.Log ("start new multiplayer ");
+		multiPlayerPanel.SetActive (false);
 		GameData.dataControl.DeletePerformanceStats ();
 		GameData.dataControl.twoPlayer = true;
+		GameData.dataControl.player1TurnComplete = false;
+
 		GameData.dataControl.Save ();
 		Application.LoadLevel ("NEWGAME");
 	}
 
 	public void NewSinglePlayer()
 	{
+		Debug.Log (" start new single player ");
 		GameData.dataControl.twoPlayer = false;
+		GameData.dataControl.player1TurnComplete = false;
+
+		GameData.dataControl.Save ();
+		Application.LoadLevel ("NEWGAME");
+	}
+
+	public void PlayAgain()
+	{
+		Debug.Log ("play again");
+		multiPlayerPanel.SetActive (false);
+
 		GameData.dataControl.Save ();
 		Application.LoadLevel ("NEWGAME");
 	}
